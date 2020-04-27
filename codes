@@ -1,0 +1,108 @@
+#include <Keypad.h>
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(13, 12, 11, 10, A0, A1);
+
+const byte ROWS = 4;
+const byte COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1', '2', '3', 'A'},
+  {'4', '5', '6', 'B'},
+  {'7', '8', '9', 'C'},
+  {'*', '0', '#', 'D'}
+};
+byte rowPins[ROWS] = {9, 8, 7, 6};
+byte colPins[COLS] = {5, 4, 3, 2};
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+char numbers[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+char operators[] = {'A', 'B', 'C', 'D', '#', '*'};
+
+String operand1 = "";
+String operand2 = "";
+String operatorChar = "";
+
+int num1 = 0;
+int num2 = 0;
+float result = 0.0;
+int firstline = 0;
+int secondline = 0;
+
+bool calculate = false;
+
+void setup()
+{
+  lcd.begin(16,2); 
+}
+
+void loop()
+{
+  char key = keypad.getKey();
+  if(key == '*' && key != NO_KEY){
+    clearDisplayAndVars(); //Clear display and variables
+  } 
+  else if(key == '#' && key != NO_KEY){
+    doCalculation();               //Do the calculation
+    lcd.setCursor(firstline, 0);   //Result will be written on the first line
+    lcd.print(result);             //Calculation result will be shown
+    delay(1000);
+    firstline++;
+  } 
+  else if(key < 58 && key != NO_KEY){ //A number is entered
+    lcd.setCursor(secondline, 1);  //Inputs will be shown on the second line
+    lcd.print(key);
+    makeNumbers(key);
+    secondline++;
+  } 
+  else if(key != NO_KEY){  //An operator is entered
+    lcd.setCursor(firstline, 0);   //Operators will be shown on the first line
+    if(key == 'A') {
+      operatorChar = "+";
+      lcd.print("+");
+    } else if(key == 'B') {
+      operatorChar = "-";
+      lcd.print("-");
+    } else if(key == 'C') {
+      operatorChar = "*";
+      lcd.print("*");
+    } else if(key == 'D') {
+      operatorChar = "/";
+      lcd.print("/");
+    }
+    firstline++;
+  }
+}
+
+void clearDisplayAndVars(){
+  lcd.clear();
+  operand1 = "";
+  operand2 = "";
+  operatorChar = "";
+  firstline = 0;
+  secondline = 0;
+  result = 0.0;
+  calculate = false;
+}
+
+void makeNumbers(char key){
+  if(operatorChar == ""){              //First number entered
+    operand1 += key;
+  } else if(operatorChar.length() == 1 and calculate == false) { //First number completed
+    operand2 += key;
+  }
+  num1 = operand1.toInt();
+  num2 = operand2.toInt();
+}
+
+void doCalculation(){
+  calculate = true;
+  if(operatorChar == "+") {
+    result = num1 + num2;
+  } else if(operatorChar == "-") {
+    result = num1 - num2;
+  } else if(operatorChar == "*") {
+    result = num1 * num2;
+  } else if(operatorChar == "/") {
+    result = float(num1) / float(num2);
+  }
+}
